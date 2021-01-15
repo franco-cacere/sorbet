@@ -117,7 +117,15 @@ DispatchResult ShapeType::dispatchCall(const GlobalState &gs, const DispatchArgs
     categoryCounterInc("dispatch_call", "shapetype");
     auto method = Symbols::Shape().data(gs)->findMember(gs, args.name);
     if (method.exists() && method.data(gs)->intrinsic != nullptr) {
-        DispatchComponent comp{args.selfType, method.asMethodRef(), {}, nullptr, nullptr, nullptr, ArgInfo{}, nullptr};
+        DispatchComponent comp{args.selfType,
+                               method.asMethodRef(),
+                               static_cast<u2>(args.args.size()),
+                               {},
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               ArgInfo{},
+                               nullptr};
         DispatchResult res{nullptr, std::move(comp)};
         method.data(gs)->intrinsic->apply(gs, args, res);
         if (res.returnType != nullptr) {
@@ -131,7 +139,15 @@ DispatchResult TupleType::dispatchCall(const GlobalState &gs, const DispatchArgs
     categoryCounterInc("dispatch_call", "tupletype");
     auto method = Symbols::Tuple().data(gs)->findMember(gs, args.name);
     if (method.exists() && method.data(gs)->intrinsic != nullptr) {
-        DispatchComponent comp{args.selfType, method.asMethodRef(), {}, nullptr, nullptr, nullptr, ArgInfo{}, nullptr};
+        DispatchComponent comp{args.selfType,
+                               method.asMethodRef(),
+                               static_cast<u2>(args.args.size()),
+                               {},
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               ArgInfo{},
+                               nullptr};
         DispatchResult res{nullptr, std::move(comp)};
         method.data(gs)->intrinsic->apply(gs, args, res);
         if (res.returnType != nullptr) {
@@ -505,16 +521,17 @@ optional<core::AutocorrectSuggestion> maybeSuggestExtendTHelpers(const GlobalSta
 //    (with a subtype check on the key type, once we have generics)
 DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &args, core::ClassOrModuleRef symbol,
                                   const vector<TypePtr> &targs) {
+    auto argCount = static_cast<u2>(args.args.size());
     if (symbol == core::Symbols::untyped()) {
         return DispatchResult(Types::untyped(gs, args.thisType.untypedBlame()), std::move(args.selfType),
-                              Symbols::noMethod());
+                              Symbols::noMethod(), argCount);
     } else if (symbol == Symbols::void_()) {
         if (!args.suppressErrors) {
             if (auto e = gs.beginError(core::Loc(args.locs.file, args.locs.call), errors::Infer::UnknownMethod)) {
                 e.setHeader("Can not call method `{}` on void type", args.name.show(gs));
             }
         }
-        return DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod());
+        return DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod(), argCount);
     }
 
     SymbolRef mayBeOverloaded = symbol.data(gs)->findMemberTransitive(gs, args.name);
@@ -525,7 +542,8 @@ DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &arg
             // `BasicObject`, but our method-resolution order is wrong, and
             // putting it there will inadvertently shadow real definitions in
             // some cases, so we special-case it here as a last resort.
-            auto result = DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod());
+            auto result =
+                DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod(), argCount);
             if (!args.args.empty() && !args.suppressErrors) {
                 if (auto e = gs.beginError(core::Loc(args.locs.file, args.locs.call),
                                            errors::Infer::MethodArgumentCountMismatch)) {
@@ -536,9 +554,10 @@ DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &arg
             }
             return result;
         } else if (args.name == core::Names::super()) {
-            return DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod());
+            return DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod(), argCount);
         }
-        auto result = DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod());
+        auto result =
+            DispatchResult(Types::untypedUntracked(), std::move(args.selfType), Symbols::noMethod(), argCount);
         if (args.suppressErrors) {
             // Short circuit here to avoid constructing an expensive error message.
             return result;
@@ -680,6 +699,7 @@ DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &arg
     auto nonPosArgs = (args.args.size() - args.numPosArgs);
     bool hasKwsplat = nonPosArgs & 0x1;
     auto numKwargs = hasKwsplat ? nonPosArgs - 1 : nonPosArgs;
+    component.totalArgs = argCount;
 
     // p -> params, i.e., what was mentioned in the defintiion
     auto pit = data->arguments().begin();
