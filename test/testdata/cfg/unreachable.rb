@@ -41,3 +41,15 @@ def main
     puts # error: This code is unreachable
   end
 end
+
+def infinite_loop_while
+  while true
+    puts
+  end
+end
+
+def infinite_loop_until
+  until false
+    puts
+  end
+end
