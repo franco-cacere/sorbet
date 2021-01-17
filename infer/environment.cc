@@ -505,6 +505,8 @@ void Environment::updateKnowledge(core::Context ctx, cfg::LocalRef local, core::
             auto mayBeOverridden = s.symbol.data(ctx.state)->findMemberTransitive(ctx.state, send->fun);
             auto objectBang = core::Symbols::Object().data(ctx.state)->findMemberTransitive(ctx.state, send->fun);
 
+            ENFORCE(mayBeOverridden.exists());
+            ENFORCE(objectBang.exists());
             if (mayBeOverridden != objectBang) {
                 return;
             }
