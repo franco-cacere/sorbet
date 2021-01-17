@@ -499,6 +499,17 @@ bool isSingleton(core::Context ctx, core::SymbolRef sym) {
 void Environment::updateKnowledge(core::Context ctx, cfg::LocalRef local, core::Loc loc, const cfg::Send *send,
                                   KnowledgeFilter &knowledgeFilter) {
     if (send->fun == core::Names::bang()) {
+        if (core::isa_type<core::ClassType>(send->recv.type)) {
+            auto s = core::cast_type_nonnull<core::ClassType>(send->recv.type);
+
+            auto mayBeOverridden = s.symbol.data(ctx.state)->findMemberTransitive(ctx.state, send->fun);
+            auto objectBang = core::Symbols::Object().data(ctx.state)->findMemberTransitive(ctx.state, send->fun);
+
+            if (mayBeOverridden != objectBang) {
+                return;
+            }
+        }
+
         if (!knowledgeFilter.isNeeded(local)) {
             return;
         }
