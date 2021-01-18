@@ -160,7 +160,7 @@ out-of-bounds. If you would rather raise an exception than handle `nil`, use the
 [0, 1, 2].fetch(3) # IndexError: index 3 outside of array bounds
 ```
 
-## Why is `super` is untyped, even when the parent method has a `sig`?
+## Why is `super` untyped, even when the parent method has a `sig`?
 
 Sorbet can't know what the "parent method" is 100% of the time. For example,
 when calling `super` from a method defined in a module, the `super` method will
