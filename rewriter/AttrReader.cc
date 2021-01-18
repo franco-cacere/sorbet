@@ -122,7 +122,7 @@ void ensureSafeSig(core::MutableContext ctx, const core::NameRef attrFun, ast::S
 // To convert a sig into a writer sig with argument `name`, we copy the `returns(...)`
 // value into the `sig {params(...)}` using whatever name we have for the setter.
 ast::ExpressionPtr toWriterSigForName(core::MutableContext ctx, ast::Send *sharedSig, const core::NameRef name,
-                                core::LocOffsets nameLoc) {
+                                      core::LocOffsets nameLoc) {
     ENFORCE(ASTUtil::castSig(sharedSig), "We weren't given a send node that's a valid signature");
 
     // There's a bit of work here because deepCopy gives us back an Expression when we know it's a Send.

@@ -116,7 +116,7 @@ bool ASTUtil::hasTruthyHashValue(core::MutableContext ctx, const ast::Hash &hash
 }
 
 pair<ast::ExpressionPtr, ast::ExpressionPtr> ASTUtil::extractHashValue(core::MutableContext ctx, ast::Hash &hash,
-                                                           core::NameRef name) {
+                                                                       core::NameRef name) {
     int i = -1;
     for (auto &keyExpr : hash.keys) {
         i++;
@@ -209,7 +209,7 @@ ast::ExpressionPtr ASTUtil::mkGet(core::Context ctx, core::LocOffsets loc, core:
 }
 
 ast::ExpressionPtr ASTUtil::mkSet(core::Context ctx, core::LocOffsets loc, core::NameRef name, core::LocOffsets argLoc,
-                            ast::ExpressionPtr rhs) {
+                                  ast::ExpressionPtr rhs) {
     return ast::MK::SyntheticMethod1(loc, loc, name, ast::MK::Local(argLoc, core::Names::arg0()), move(rhs));
 }
 
